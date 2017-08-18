@@ -20,10 +20,12 @@ import android.widget.Toast;
 
 import com.google.android.gms.vision.CameraSource;
 import com.google.android.gms.vision.Detector;
+import com.google.android.gms.vision.text.Text;
 import com.google.android.gms.vision.text.TextBlock;
 import com.google.android.gms.vision.text.TextRecognizer;
 
 import java.io.IOException;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
     private SurfaceView m_surface_view;
@@ -135,8 +137,10 @@ public class MainActivity extends AppCompatActivity {
                         });
                     }
 
+
                 }
             });
+
 
         }
     }
