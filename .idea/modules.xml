@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/MobileVisionApiCamera.iml" filepath="$PROJECT_DIR$/MobileVisionApiCamera.iml" />
+      <module fileurl="file://$PROJECT_DIR$/CreditLoader.iml" filepath="$PROJECT_DIR$/CreditLoader.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
     </modules>
   </component>
