@@ -1,3 +1,11 @@
 <resources>
-    <string name="app_name">Mobile Vision Api Camera</string>
+    <string name="app_name">Credit-Topa</string>
+
+    <string-array name="carriers">
+        <item>Safaricom</item>
+        <item>Airtel</item>
+        <item>Orange</item>
+        <item>Yu</item>
+        <item>Equitel</item>
+    </string-array>
 </resources>

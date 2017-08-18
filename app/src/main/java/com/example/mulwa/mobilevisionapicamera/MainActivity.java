@@ -1,16 +1,20 @@
 package com.example.mulwa.mobilevisionapicamera;
 
 import android.Manifest;
+import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
+import android.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.util.SparseArray;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.view.View;
 import android.widget.EditText;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -25,8 +29,9 @@ public class MainActivity extends AppCompatActivity {
     private SurfaceView m_surface_view;
     private EditText m_display;
     private CameraSource cameraSource;
-    private Toolbar  toolbar;
     private final int RequestCameraPermissionId = 1001;
+    private TextView  m_provider;
+    private RelativeLayout relativeLayout;
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
@@ -54,14 +59,16 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         m_display = (EditText) findViewById(R.id.tv_display);
         m_surface_view = (SurfaceView) findViewById(R.id.surface_view);
-        toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().setDisplayShowHomeEnabled(true);
-//            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-            getSupportActionBar().setTitle("Topa-Topa");
+        m_provider = (TextView)  findViewById(R.id.tv_provider);
+        relativeLayout= (RelativeLayout) findViewById(R.id.viewLayout);
 
-        }
+        m_provider.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                popProvider();
+            }
+        });
+
 
         TextRecognizer textRecognizer = new TextRecognizer.Builder(getApplicationContext()).build();
         if (!textRecognizer.isOperational()) {
@@ -136,5 +143,32 @@ public class MainActivity extends AppCompatActivity {
 
     private void showToast(String msg){
         Toast.makeText(getApplicationContext(),msg,Toast.LENGTH_LONG).show();
+    }
+    private void popProvider(){
+        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
+        final String[] category = getResources().getStringArray(R.array.carriers);
+        alertDialogBuilder.setTitle("Select Provider");
+        alertDialogBuilder.setItems(R.array.carriers, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                String selectedProvider = category[i];
+                if(selectedProvider != null){
+                    m_provider.setText(selectedProvider);
+
+                }
+
+            }
+        });
+        alertDialogBuilder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+//               what to execute  when user selects cancel button
+
+            }
+        });
+        AlertDialog alertDialog = alertDialogBuilder.create();
+        alertDialog.show();
+
+
     }
 }
