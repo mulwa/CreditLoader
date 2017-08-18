@@ -17,26 +17,58 @@
         android:elevation="4dp"
         xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res-auto"/>
-
-    <SurfaceView
-        android:layout_width="match_parent"
-        android:layout_height="250dp"
-        android:id="@+id/surface_view"
-        />
-    <LinearLayout
-        android:layout_width="match_parent"
+    <RelativeLayout
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_margin="16dp">
-        <TextView
-            android:layout_width="wrap_content"
+        android:layout_gravity="bottom|center"
+        android:orientation="vertical"
+        android:weightSum="1">
+        <SurfaceView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:id="@+id/surface_view"
+            />
+        <RelativeLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:id="@+id/tv_display"
-            android:hint="Loaded text"
-            android:layout_gravity="center"
-            android:layout_alignParentBottom="true"
-            android:textSize="20sp"
-            android:layout_below="@+id/surface_view"/>
-    </LinearLayout>
+            android:layout_margin="20dp"
+            android:padding="10dp"
+            android:layout_centerInParent="true"
+            android:layout_gravity="bottom|center"
+            android:background="#fff"
+            android:orientation="vertical" >
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:orientation="vertical"
+                android:layout_height="wrap_content">
+                <EditText
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/tv_display"
+                    android:editable="false"
+                    android:hint="Loaded text"
+                    android:layout_margin="5dp"
+                    android:textSize="20sp"/>
+                <Button
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/buttondrawable"
+                    android:fontFamily="sans-serif-condensed"
+                    android:textSize="16sp"
+                    android:textColor="@color/white"
+                    android:textStyle="bold"
+                    android:layout_margin="5dp"
+                    android:text="Top Up"/>
+            </LinearLayout>
+
+
+        </RelativeLayout>
+
+
+    </RelativeLayout>
+
+
+
 
 
 

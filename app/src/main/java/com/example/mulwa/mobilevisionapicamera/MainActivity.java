@@ -10,6 +10,7 @@ import android.support.v7.widget.Toolbar;
 import android.util.SparseArray;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -22,7 +23,7 @@ import java.io.IOException;
 
 public class MainActivity extends AppCompatActivity {
     private SurfaceView m_surface_view;
-    private TextView m_display;
+    private EditText m_display;
     private CameraSource cameraSource;
     private Toolbar  toolbar;
     private final int RequestCameraPermissionId = 1001;
@@ -51,7 +52,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        m_display = (TextView) findViewById(R.id.tv_display);
+        m_display = (EditText) findViewById(R.id.tv_display);
         m_surface_view = (SurfaceView) findViewById(R.id.surface_view);
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -59,7 +60,7 @@ public class MainActivity extends AppCompatActivity {
             getSupportActionBar().setDisplayShowHomeEnabled(true);
 //            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
             getSupportActionBar().setTitle("Topa-Topa");
-            getSupportActionBar().setIcon(R.drawable.common_google_signin_btn_icon_dark_disabled);
+
         }
 
         TextRecognizer textRecognizer = new TextRecognizer.Builder(getApplicationContext()).build();
