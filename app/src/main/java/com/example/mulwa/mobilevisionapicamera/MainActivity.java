@@ -2,17 +2,23 @@ package com.example.mulwa.mobilevisionapicamera;
 
 import android.Manifest;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.app.AlertDialog;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
+import android.text.TextUtils;
+import android.util.Log;
 import android.util.SparseArray;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -27,13 +33,15 @@ import com.google.android.gms.vision.text.TextRecognizer;
 import java.io.IOException;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener{
     private SurfaceView m_surface_view;
     private EditText m_display;
     private CameraSource cameraSource;
-    private final int RequestCameraPermissionId = 1001;
+    private final static int RequestCameraPermissionId = 1001;
+    private final static int MAKE_CALL_PERMISSION_REQUEST_CODE = 1002;
     private TextView  m_provider;
     private RelativeLayout relativeLayout;
+    private Button m_top_up, m_check_balance, m_clear;
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
@@ -64,17 +72,35 @@ public class MainActivity extends AppCompatActivity {
         m_provider = (TextView)  findViewById(R.id.tv_provider);
         relativeLayout= (RelativeLayout) findViewById(R.id.viewLayout);
 
+        m_top_up = (Button) findViewById(R.id.btn_topUp);
+        m_check_balance = (Button) findViewById(R.id.btn_check_balance);
+        m_clear = (Button) findViewById(R.id.btn_clear);
+
+        m_top_up.setOnClickListener(this);
+        m_check_balance.setOnClickListener(this);
+        m_clear.setOnClickListener(this);
+
         m_provider.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 popProvider();
             }
         });
+        if(checkPermission(Manifest.permission.CALL_PHONE)){
+            m_top_up.setEnabled(true);
+            m_check_balance.setEnabled(true);
+
+        }else {
+            m_top_up.setEnabled(false);
+            m_check_balance.setEnabled(false);
+            ActivityCompat.requestPermissions(this,new String[]{Manifest.permission.CALL_PHONE},MAKE_CALL_PERMISSION_REQUEST_CODE);
+
+        }
 
 
         TextRecognizer textRecognizer = new TextRecognizer.Builder(getApplicationContext()).build();
         if (!textRecognizer.isOperational()) {
-            showToast("Detector depemdencies not ready for now");
+            showToast("Detector Dependencies not ready for now");
         } else {
             cameraSource = new CameraSource.Builder(getApplicationContext(), textRecognizer)
                     .setFacing(CameraSource.CAMERA_FACING_BACK)
@@ -125,13 +151,17 @@ public class MainActivity extends AppCompatActivity {
                         m_display.post(new Runnable() {
                             @Override
                             public void run() {
-                                StringBuilder stringBuilder = new StringBuilder();
+                                String lines="";
                                 for(int i =0; i<items.size();i++){
                                     TextBlock item = items.valueAt(i);
-                                    stringBuilder.append(item.getValue());
-                                    stringBuilder.append("\n");
+                                    for (Text  line: item.getComponents()){
+                                        lines = line.getValue().trim();
+                                    }
+                                    m_display.setText(lines);
+
                                 }
-                                m_display.setText(stringBuilder.toString());
+//                                this was displaying a block of text
+//                                m_display.setText(stringBuilder.toString());
 
                             }
                         });
@@ -145,6 +175,30 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    @Override
+    public void onClick(View view) {
+        int id = view.getId();
+        switch (id){
+            case R.id.btn_topUp:
+                if(validateProvide() && validateCode()){
+                    loadCredit(m_provider.getText().toString(),m_display.getText().toString().trim());
+
+                }
+                break;
+            case R.id.btn_check_balance:
+                if(validateProvide()){
+                    checkBalance(m_provider.getText().toString());
+                }
+
+                break;
+            case R.id.btn_clear:
+                clearUi();
+                break;
+            default:
+                break;
+        }
+
+    }
     private void showToast(String msg){
         Toast.makeText(getApplicationContext(),msg,Toast.LENGTH_LONG).show();
     }
@@ -175,4 +229,92 @@ public class MainActivity extends AppCompatActivity {
 
 
     }
+    private void checkBalance(String provider){
+        int code = 141 ;
+        switch (provider){
+            case "Safaricom":
+                code = 144;
+                break;
+            case "Airtel":
+                code = 131;
+                break;
+            case "Orange":
+                code = 131;
+                break;
+            case "Yu":
+                code =131;
+                break;
+            case "Equitel":
+                code = 131;
+                break;
+            default:
+                break;
+        }
+//        String dial = "tel:" + code;
+        String dial = "tel:" +Uri.encode("*"+String.valueOf(code)+"#");
+        Log.d("dial",dial);
+       if(checkPermission(Manifest.permission.CALL_PHONE)){
+           startActivity(new Intent(Intent.ACTION_CALL, Uri.parse(dial)));
+       }else {
+           showToast("Grant call permission");
+       }
+    }
+    private void loadCredit(String provider,String pin){
+        int code ;
+        switch (provider){
+            case "Safaricom":
+                code = 141;
+                break;
+            case "Airtel":
+                code = 130;
+                break;
+            case "Orange":
+                code = 132;
+                break;
+            case "Yu":
+                code =131;
+                break;
+            case "Equitel":
+                code = 131;
+                break;
+            default:
+                code = 141;
+                break;
+        }
+//        String dial = "tel:" + code;
+        String dial = "tel:" +Uri.encode("*"+String.valueOf(code)+"*"+pin+"#");
+        Log.d("topup",dial);
+        if(checkPermission(Manifest.permission.CALL_PHONE)){
+            startActivity(new Intent(Intent.ACTION_CALL, Uri.parse(dial)));
+        }else {
+            showToast("Grant call permission");
+        }
+    }
+
+    private void clearUi(){
+        if(!TextUtils.isEmpty(m_display.getText().toString())){
+            m_display.setText("");
+        }
+
+    }
+    private boolean  checkPermission(String permission){
+        return ContextCompat.checkSelfPermission(this, permission)== PackageManager.PERMISSION_GRANTED;
+    }
+    private boolean validateProvide(){
+        String m_pervider = m_provider.getText().toString().trim();
+        if(m_pervider.contains("Select Provider")){
+            showToast("Select Your Service Provider");
+            return false;
+        }
+        return true;
+    }
+    private boolean validateCode(){
+        if(TextUtils.isEmpty(m_display.getText().toString())){
+            showToast("Please Scan Credit code");
+            return false;
+
+        }
+        return true;
+    }
+
 }

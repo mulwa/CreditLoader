@@ -57,25 +57,17 @@
 
                     </TextView>
                     <Button
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:background="@drawable/buttondrawable"
-                        android:fontFamily="sans-serif-condensed"
-                        android:textSize="16sp"
-                        android:textColor="@color/white"
-                        android:textStyle="bold"
-                        android:layout_margin="5dp"
+                        style="@style/btn_style"
+                        android:id="@+id/btn_topUp"
                         android:text="Top Up"/>
                     <Button
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:background="@drawable/buttondrawable"
-                        android:fontFamily="sans-serif-condensed"
-                        android:textSize="16sp"
-                        android:textColor="@color/white"
-                        android:textStyle="bold"
-                        android:layout_margin="5dp"
+                        style="@style/btn_style"
+                        android:id="@+id/btn_check_balance"
                         android:text="Check Balance"/>
+                    <Button
+                        style="@style/btn_style"
+                        android:id="@+id/btn_clear"
+                        android:text="Clear"/>
                 </LinearLayout>
             </ScrollView>
 
