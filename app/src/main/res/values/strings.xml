@@ -1,5 +1,7 @@
 <resources>
     <string name="app_name">Credit-Topa</string>
+    <string name="toggle_turn_on">Turn Flash Off</string>
+    <string name="toggle_turn_off">Turn Flash on</string>
 
     <string-array name="carriers">
         <item>Safaricom</item>

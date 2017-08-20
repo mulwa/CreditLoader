@@ -19,8 +19,10 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.RelativeLayout;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -42,6 +44,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private TextView  m_provider;
     private RelativeLayout relativeLayout;
     private Button m_top_up, m_check_balance, m_clear;
+    private Switch m_flash_switch;
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
@@ -75,6 +78,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         m_top_up = (Button) findViewById(R.id.btn_topUp);
         m_check_balance = (Button) findViewById(R.id.btn_check_balance);
         m_clear = (Button) findViewById(R.id.btn_clear);
+        m_flash_switch =(Switch)findViewById(R.id.flash_switch);
 
         m_top_up.setOnClickListener(this);
         m_check_balance.setOnClickListener(this);
@@ -84,6 +88,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void onClick(View view) {
                 popProvider();
+            }
+        });
+
+        m_flash_switch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean ischecked) {
+                if(ischecked){
+                    showToast("turn Flashlight on");
+                }else {
+                    showToast("turn flashlight off");
+                }
             }
         });
         if(checkPermission(Manifest.permission.CALL_PHONE)){

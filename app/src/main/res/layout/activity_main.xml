@@ -6,68 +6,95 @@
     android:orientation="vertical"
     android:layout_height="match_parent"
     tools:context="com.example.mulwa.mobilevisionapicamera.MainActivity">
+
     <RelativeLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="bottom|center"
         android:orientation="vertical"
         android:weightSum="1">
+
         <SurfaceView
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
             android:id="@+id/surface_view"
-            />
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
         <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_marginLeft="16dp"
+            android:layout_marginTop="10dp"
+            android:background="@android:color/transparent"
+            android:layout_height="wrap_content">
+
+            <Switch
+                android:id="@+id/flash_switch"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checked="false"
+                android:text="Flashlight"
+                android:textColor="@color/white"
+                android:textOff="Off"
+                android:gravity="center"
+                android:textOn="On"/><!-- text to be displayed whenever current state is checked-->
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/viewLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="20dp"
-            android:padding="10dp"
-            android:layout_centerInParent="true"
+            android:layout_alignParentBottom="true"
             android:layout_gravity="bottom|center"
+            android:layout_margin="20dp"
             android:background="#fff"
-            android:id="@+id/viewLayout"
-            android:orientation="vertical" >
+            android:orientation="vertical"
+            android:padding="10dp">
+
             <ScrollView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
+
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:orientation="vertical"
-                    android:layout_height="wrap_content">
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
                     <EditText
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
                         android:id="@+id/tv_display"
-                        android:textColor="@color/black"
-                        android:fontFamily="sans-serif-medium"
-                        android:editable="false"
-                        android:hint="Credit Pin"
-                        android:layout_margin="5dp"
-                        android:textSize="20sp"/>
-                    <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:layout_margin="5dp"
+                        android:editable="false"
+                        android:fontFamily="sans-serif-medium"
+                        android:hint="Credit Pin"
+                        android:textColor="@color/black"
+                        android:textSize="20sp" />
+
+                    <TextView
+                        android:id="@+id/tv_provider"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="5dp"
+                        android:fontFamily="sans-serif-medium"
                         android:padding="5dp"
                         android:text="Select Provider"
-                        android:fontFamily="sans-serif-medium"
                         android:textColor="@color/black"
-                        android:id="@+id/tv_provider"
-                        android:textSize="20sp"
-                        android:layout_margin="5dp">
+                        android:textSize="20sp">
 
                     </TextView>
+
                     <Button
-                        style="@style/btn_style"
                         android:id="@+id/btn_topUp"
-                        android:text="Top Up"/>
-                    <Button
                         style="@style/btn_style"
+                        android:text="Top Up" />
+
+                    <Button
                         android:id="@+id/btn_check_balance"
-                        android:text="Check Balance"/>
-                    <Button
                         style="@style/btn_style"
+                        android:text="Check Balance" />
+
+                    <Button
                         android:id="@+id/btn_clear"
-                        android:text="Clear"/>
+                        style="@style/btn_style"
+                        android:text="Clear" />
                 </LinearLayout>
             </ScrollView>
 
@@ -76,11 +103,6 @@
 
 
     </RelativeLayout>
-
-
-
-
-
 
 
 </LinearLayout>
