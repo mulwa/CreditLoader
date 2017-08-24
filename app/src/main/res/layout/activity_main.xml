@@ -22,6 +22,8 @@
             android:layout_width="wrap_content"
             android:layout_marginLeft="16dp"
             android:layout_marginTop="10dp"
+            android:id="@+id/flash_layout"
+            android:visibility="invisible"
             android:background="@android:color/transparent"
             android:layout_height="wrap_content">
 

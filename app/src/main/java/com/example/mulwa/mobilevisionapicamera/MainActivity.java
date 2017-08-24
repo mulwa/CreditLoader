@@ -4,6 +4,8 @@ import android.Manifest;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.SurfaceTexture;
+import android.hardware.Camera;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
@@ -26,6 +28,7 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.RuntimeExecutionException;
 import com.google.android.gms.vision.CameraSource;
 import com.google.android.gms.vision.Detector;
 import com.google.android.gms.vision.text.Text;
@@ -35,6 +38,10 @@ import com.google.android.gms.vision.text.TextRecognizer;
 import java.io.IOException;
 import java.util.List;
 
+import static android.hardware.Camera.Parameters.FLASH_MODE_AUTO;
+import static android.hardware.Camera.Parameters.FLASH_MODE_ON;
+import static android.hardware.Camera.Parameters.FLASH_MODE_TORCH;
+
 public class MainActivity extends AppCompatActivity implements View.OnClickListener{
     private SurfaceView m_surface_view;
     private EditText m_display;
@@ -43,8 +50,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private final static int MAKE_CALL_PERMISSION_REQUEST_CODE = 1002;
     private TextView  m_provider;
     private RelativeLayout relativeLayout;
+    private RelativeLayout m_flash_layout;
     private Button m_top_up, m_check_balance, m_clear;
+    private Camera camera;
+    private Camera.Parameters params;
+
     private Switch m_flash_switch;
+
+
+
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
@@ -74,6 +88,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         m_surface_view = (SurfaceView) findViewById(R.id.surface_view);
         m_provider = (TextView)  findViewById(R.id.tv_provider);
         relativeLayout= (RelativeLayout) findViewById(R.id.viewLayout);
+        m_flash_layout = (RelativeLayout) findViewById(R.id.flash_layout);
 
         m_top_up = (Button) findViewById(R.id.btn_topUp);
         m_check_balance = (Button) findViewById(R.id.btn_check_balance);
@@ -83,6 +98,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         m_top_up.setOnClickListener(this);
         m_check_balance.setOnClickListener(this);
         m_clear.setOnClickListener(this);
+
+
+
+
+
+        if(hasFlashSupport()){
+            m_flash_layout.setVisibility(View.VISIBLE);
+        }else {
+            m_flash_layout.setVisibility(View.INVISIBLE);
+        }
 
         m_provider.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -95,9 +120,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean ischecked) {
                 if(ischecked){
-                    showToast("turn Flashlight on");
+                    turnOnFlash();
                 }else {
-                    showToast("turn flashlight off");
+                    turnOffFlash();
                 }
             }
         });
@@ -123,6 +148,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     .setRequestedFps(2.0f)
                     .setAutoFocusEnabled(true)
                     .build();
+            getCamera();
             m_surface_view.getHolder().addCallback(new SurfaceHolder.Callback() {
                 @Override
                 public void surfaceCreated(SurfaceHolder surfaceHolder) {
@@ -170,7 +196,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                 for(int i =0; i<items.size();i++){
                                     TextBlock item = items.valueAt(i);
                                     for (Text  line: item.getComponents()){
-                                        lines = line.getValue().trim();
+                                        if(line.getValue().length() >= 14 && !line.getValue().startsWith("00")){
+                                            lines = line.getValue().trim();
+                                        }
                                     }
                                     m_display.setText(lines);
 
@@ -187,6 +215,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             });
 
 
+        }
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        getCamera();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        // on stop release the camera
+        if (camera != null) {
+            camera.release();
+            camera = null;
         }
     }
 
@@ -315,6 +359,37 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private boolean  checkPermission(String permission){
         return ContextCompat.checkSelfPermission(this, permission)== PackageManager.PERMISSION_GRANTED;
     }
+    private boolean hasFlashSupport(){
+        return getApplicationContext().getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA_FLASH);
+    }
+    private void getCamera(){
+        try {
+            camera.release();
+            camera = null;
+        } catch (Exception e) {
+            // This will happen if the camera fails to turn on.
+        }
+    }
+    public void turnOnFlash() {
+        if (camera == null || params == null) {
+            return;
+        }
+        params = camera.getParameters();
+        params.setFlashMode(Camera.Parameters.FLASH_MODE_TORCH);
+        camera.setParameters(params);
+        camera.startPreview();
+    }
+
+    private void turnOffFlash(){
+        if(camera == null || params==null){
+            return;
+        }
+        params = camera.getParameters();
+        params.setFlashMode(Camera.Parameters.FLASH_MODE_OFF);
+        camera.setParameters(params);
+        camera.stopPreview();
+
+    }
     private boolean validateProvide(){
         String m_pervider = m_provider.getText().toString().trim();
         if(m_pervider.contains("Select Provider")){
@@ -331,5 +406,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
         return true;
     }
+
 
 }
