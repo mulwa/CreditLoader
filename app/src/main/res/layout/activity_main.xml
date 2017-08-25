@@ -59,17 +59,18 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical">
 
+                    <View style="@style/Divider"/>
+
                     <EditText
                         android:id="@+id/tv_display"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_margin="5dp"
                         android:editable="false"
                         android:fontFamily="sans-serif-medium"
                         android:hint="Credit Pin"
                         android:textColor="@color/black"
-                        android:textSize="20sp" />
-
+                        android:textSize="18sp" />
+                    <View style="@style/Divider"/>
                     <TextView
                         android:id="@+id/tv_provider"
                         android:layout_width="match_parent"
@@ -79,9 +80,9 @@
                         android:padding="5dp"
                         android:text="Select Provider"
                         android:textColor="@color/black"
-                        android:textSize="20sp">
-
+                        android:textSize="18sp">
                     </TextView>
+                    <View style="@style/Divider"/>
 
                     <Button
                         android:id="@+id/btn_topUp"

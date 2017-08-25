@@ -10,4 +10,25 @@
         <item>Yu</item>
         <item>Equitel</item>
     </string-array>
+
+    <string name="title_activity_welcome">Home Screen</string>
+    <string name="next">NEXT</string>
+    <string name="skip">SKIP</string>
+    <string name="start">GOT IT</string>
+
+    <string name="slide_1_title">Welcome!</string>
+    <string name="slide_1_desc">The easiest way to load Credit to your phone!</string>
+
+    <string name="slide_2_title">Easy As 1"-"2"-"3</string>
+    <string name="slide_2_desc">SCRATCH, SCAN AND LOAD</string>
+
+    <string name="slide_3_title">Check Balance</string>
+    <string name="slide_3_desc">Check your Airtime balance by a press of a button</string>
+
+    <string name="slide_4_title">Set Provider</string>
+    <string name="slide_4_desc">(Optional)Set Your default Service Provider to prevent setting provider for Every operation </string>
+
+    <string name="play_again_desc">To see the welcome slider again, goto Settings -> apps -> welcome slider -> clear data</string>
+    <string name="play_again">Play Again</string>
+
 </resources>
