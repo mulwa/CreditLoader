@@ -1,24 +1,29 @@
 package com.example.mulwa.mobilevisionapicamera;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
+import android.app.Activity;
+import android.app.Dialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
-import android.graphics.SurfaceTexture;
+import android.graphics.Color;
 import android.hardware.Camera;
 import android.net.Uri;
 import android.support.annotation.NonNull;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.app.AlertDialog;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.util.Log;
 import android.util.SparseArray;
 import android.view.SurfaceHolder;
-import android.view.SurfaceView;
+
 import android.view.View;
 import android.widget.Button;
 import android.widget.CompoundButton;
@@ -28,64 +33,48 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.mulwa.mobilevisionapicamera.camera.CameraSource;
+import com.example.mulwa.mobilevisionapicamera.camera.CameraSourcePreview;
+import com.example.mulwa.mobilevisionapicamera.camera.GraphicOverlay;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.tasks.RuntimeExecutionException;
-import com.google.android.gms.vision.CameraSource;
 import com.google.android.gms.vision.Detector;
 import com.google.android.gms.vision.text.Text;
 import com.google.android.gms.vision.text.TextBlock;
 import com.google.android.gms.vision.text.TextRecognizer;
 
 import java.io.IOException;
-import java.util.List;
 
-import static android.hardware.Camera.Parameters.FLASH_MODE_AUTO;
-import static android.hardware.Camera.Parameters.FLASH_MODE_ON;
-import static android.hardware.Camera.Parameters.FLASH_MODE_TORCH;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener{
-    private SurfaceView m_surface_view;
+    private static final String TAG = "MainActivity";
     private EditText m_display;
-    private CameraSource cameraSource;
     private final static int RequestCameraPermissionId = 1001;
     private final static int MAKE_CALL_PERMISSION_REQUEST_CODE = 1002;
+    // Intent request code to handle updating play services if needed.
+    private static final int RC_HANDLE_GMS = 9001;
     private TextView  m_provider;
     private RelativeLayout relativeLayout;
     private RelativeLayout m_flash_layout;
     private Button m_top_up, m_check_balance, m_clear;
-    private Camera camera;
-    private Camera.Parameters params;
 
+
+    private CameraSourcePreview mPreview;
+    private CameraSource mCameraSource;
+    private GraphicOverlay<OcrGraphic> mGraphicOverlay;
+    private boolean autoFocus = true;
+    private boolean useFlash = false;
     private Switch m_flash_switch;
 
-
-
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        switch (requestCode){
-            case RequestCameraPermissionId:
-            {
-                if(grantResults[0]==PackageManager.PERMISSION_GRANTED){
-                    if (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED){
-                        return;
-                    }
-                    try {
-                        cameraSource.start(m_surface_view.getHolder());
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-
-                }
-            }
-        }
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         m_display = (EditText) findViewById(R.id.tv_display);
-        m_surface_view = (SurfaceView) findViewById(R.id.surface_view);
+        mPreview = (CameraSourcePreview) findViewById(R.id.preview);
+        mGraphicOverlay = (GraphicOverlay<OcrGraphic>) findViewById(R.id.graphicOverlay);
         m_provider = (TextView)  findViewById(R.id.tv_provider);
         relativeLayout= (RelativeLayout) findViewById(R.id.viewLayout);
         m_flash_layout = (RelativeLayout) findViewById(R.id.flash_layout);
@@ -101,6 +90,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 
 
+        // Check for the camera permission before accessing the camera.  If the
+        // permission is not granted yet, request permission.
+        int rc = ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA);
+        if (rc == PackageManager.PERMISSION_GRANTED) {
+            createCameraSource(autoFocus, useFlash);
+        } else {
+            requestCameraPermission();
+        }
 
 
         if(hasFlashSupport()){
@@ -120,9 +117,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean ischecked) {
                 if(ischecked){
-                    turnOnFlash();
+                    mCameraSource.setFlashMode(Camera.Parameters.FLASH_MODE_TORCH);
+
                 }else {
-                    turnOffFlash();
+                    mCameraSource.setFlashMode(Camera.Parameters.FLASH_MODE_OFF);
+
                 }
             }
         });
@@ -138,99 +137,130 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
 
 
-        TextRecognizer textRecognizer = new TextRecognizer.Builder(getApplicationContext()).build();
-        if (!textRecognizer.isOperational()) {
-            showToast("Detector Dependencies not ready for now");
-        } else {
-            cameraSource = new CameraSource.Builder(getApplicationContext(), textRecognizer)
-                    .setFacing(CameraSource.CAMERA_FACING_BACK)
-                    .setRequestedPreviewSize(1280, 1024)
-                    .setRequestedFps(2.0f)
-                    .setAutoFocusEnabled(true)
-                    .build();
-            getCamera();
-            m_surface_view.getHolder().addCallback(new SurfaceHolder.Callback() {
-                @Override
-                public void surfaceCreated(SurfaceHolder surfaceHolder) {
-                    try {
-                        if (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
 
-                            ActivityCompat.requestPermissions(MainActivity.this,new String[]{Manifest.permission.CAMERA},
-                                    RequestCameraPermissionId);
+    }
+    /**
+     * Creates and starts the camera.  Note that this uses a higher resolution in comparison
+     * to other detection examples to enable the ocr detector to detect small text samples
+     * at long distances.
+     *
+     * Suppressing InlinedApi since there is a check that the minimum version is met before using
+     * the constant.
+     */
+    @SuppressLint("InlinedApi")
+    private void createCameraSource(boolean autoFocus, boolean useFlash) {
+        Context context = getApplicationContext();
 
-                            return;
-                        }
-                        cameraSource.start(m_surface_view.getHolder());
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
+        // A text recognizer is created to find text.  An associated multi-processor instance
+        // is set to receive the text recognition results, track the text, and maintain
+        // graphics for each text block on screen.  The factory is used by the multi-processor to
+        // create a separate tracker instance for each text block.
+        TextRecognizer textRecognizer = new TextRecognizer.Builder(context).build();
+//        textRecognizer.setProcessor(new OcrDetectorProcessor(mGraphicOverlay,m_display));
+        textRecognizer.setProcessor(new Detector.Processor<TextBlock>() {
+            @Override
+            public void release() {
 
-                }
+            }
 
-                @Override
-                public void surfaceChanged(SurfaceHolder surfaceHolder, int i, int i1, int i2) {
-
-                }
-
-                @Override
-                public void surfaceDestroyed(SurfaceHolder surfaceHolder) {
-                    cameraSource.stop();
-
-                }
-            });
-
-            textRecognizer.setProcessor(new Detector.Processor<TextBlock>() {
-                @Override
-                public void release() {
-
-                }
-
-                @Override
-                public void receiveDetections(Detector.Detections<TextBlock> detections) {
-                    final SparseArray<TextBlock> items = detections.getDetectedItems();
-                    if(items.size() != 0){
-                        m_display.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                String lines="";
-                                for(int i =0; i<items.size();i++){
-                                    TextBlock item = items.valueAt(i);
-                                    for (Text  line: item.getComponents()){
-                                        if(line.getValue().length() >= 14 && !line.getValue().startsWith("00")){
-                                            lines = line.getValue().trim();
-                                        }
+            @Override
+            public void receiveDetections(Detector.Detections<TextBlock> detections) {
+                final SparseArray<TextBlock> items = detections.getDetectedItems();
+                if(items.size() != 0){
+                    m_display.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            for(int i =0; i<items.size();i++){
+                                TextBlock item = items.valueAt(i);
+                                for (Text  line: item.getComponents()){
+                                    String stringT = line.getValue().replace(" ","");
+                                    if( stringT.matches("[0-9]+")  && stringT.length() ==14){
+                                        m_display.setText(stringT);
                                     }
-                                    m_display.setText(lines);
-
                                 }
+
+
+                            }
 //                                this was displaying a block of text
 //                                m_display.setText(stringBuilder.toString());
 
-                            }
-                        });
-                    }
-
-
+                        }
+                    });
                 }
-            });
 
 
+            }
+        });
+
+        if (!textRecognizer.isOperational()) {
+            // Note: The first time that an app using a Vision API is installed on a
+            // device, GMS will download a native libraries to the device in order to do detection.
+            // Usually this completes before the app is run for the first time.  But if that
+            // download has not yet completed, then the above call will not detect any text,
+            // barcodes, or faces.
+            //
+            // isOperational() can be used to check if the required native libraries are currently
+            // available.  The detectors will automatically become operational once the library
+            // downloads complete on device.
+            Log.w(TAG, "Detector dependencies are not yet available.");
+            longSnackBar("Detector dependencies are not yet available.");
+
+            // Check for low storage.  If there is low storage, the native library will not be
+            // downloaded, so detection will not become operational.
+            IntentFilter lowstorageFilter = new IntentFilter(Intent.ACTION_DEVICE_STORAGE_LOW);
+            boolean hasLowStorage = registerReceiver(null, lowstorageFilter) != null;
+
+            if (hasLowStorage) {
+//                Toast.makeText(this, R.string.low_storage_error, Toast.LENGTH_LONG).show();
+                longSnackBar( getString( R.string.low_storage_error));
+                Log.w(TAG, getString(R.string.low_storage_error));
+            }
         }
+
+        // Creates and starts the camera.  Note that this uses a higher resolution in comparison
+        // to other detection examples to enable the text recognizer to detect small pieces of text.
+        mCameraSource =
+                new CameraSource.Builder(getApplicationContext(), textRecognizer)
+                        .setFacing(CameraSource.CAMERA_FACING_BACK)
+                        .setRequestedPreviewSize(1280, 1024)
+                        .setRequestedFps(2.0f)
+                        .setFlashMode(useFlash ? Camera.Parameters.FLASH_MODE_TORCH : null)
+                        .setFocusMode(autoFocus ? Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE : null)
+                        .build();
     }
 
     @Override
     protected void onStart() {
         super.onStart();
-        getCamera();
+
     }
 
     @Override
     protected void onStop() {
         super.onStop();
         // on stop release the camera
-        if (camera != null) {
-            camera.release();
-            camera = null;
+
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        startCameraSource();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if(mPreview != null){
+            mPreview.stop();
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if(mPreview !=null){
+            mPreview.release();
         }
     }
 
@@ -346,8 +376,35 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if(checkPermission(Manifest.permission.CALL_PHONE)){
             startActivity(new Intent(Intent.ACTION_CALL, Uri.parse(dial)));
         }else {
-            showToast("Grant call permission");
+//            showToast("Grant call permission");
+            shortSnackBar("Grant call permission");
         }
+    }
+    private void requestCameraPermission() {
+        Log.w(TAG, "Camera permission is not granted. Requesting permission");
+
+        final String[] permissions = new String[]{Manifest.permission.CAMERA};
+
+        if (!ActivityCompat.shouldShowRequestPermissionRationale(this,
+                Manifest.permission.CAMERA)) {
+            ActivityCompat.requestPermissions(this, permissions, RequestCameraPermissionId);
+            return;
+        }
+
+        final Activity thisActivity = this;
+
+        View.OnClickListener listener = new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                ActivityCompat.requestPermissions(thisActivity, permissions,
+                        RequestCameraPermissionId);
+            }
+        };
+
+        Snackbar.make(mGraphicOverlay, R.string.permission_camera_rationale,
+                Snackbar.LENGTH_INDEFINITE)
+                .setAction(R.string.ok, listener)
+                .show();
     }
 
     private void clearUi(){
@@ -362,49 +419,77 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private boolean hasFlashSupport(){
         return getApplicationContext().getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA_FLASH);
     }
-    private void getCamera(){
-        try {
-            camera.release();
-            camera = null;
-        } catch (Exception e) {
-            // This will happen if the camera fails to turn on.
+    /**
+     * Starts or restarts the camera source, if it exists.  If the camera source doesn't exist yet
+     * (e.g., because onResume was called before the camera source was created), this will be called
+     * again when the camera source is created.
+     */
+    private void startCameraSource() throws SecurityException {
+        // check that the device has play services available.
+        int code = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(
+                getApplicationContext());
+        if (code != ConnectionResult.SUCCESS) {
+            Dialog dlg =
+                    GoogleApiAvailability.getInstance().getErrorDialog(this, code, RC_HANDLE_GMS);
+            dlg.show();
         }
-    }
-    public void turnOnFlash() {
-        if (camera == null || params == null) {
-            return;
+
+        if (mCameraSource != null) {
+            try {
+                mPreview.start(mCameraSource, mGraphicOverlay);
+            } catch (IOException e) {
+                Log.e(TAG, "Unable to start camera source.", e);
+                mCameraSource.release();
+                mCameraSource = null;
+            }
         }
-        params = camera.getParameters();
-        params.setFlashMode(Camera.Parameters.FLASH_MODE_TORCH);
-        camera.setParameters(params);
-        camera.startPreview();
     }
 
-    private void turnOffFlash(){
-        if(camera == null || params==null){
-            return;
-        }
-        params = camera.getParameters();
-        params.setFlashMode(Camera.Parameters.FLASH_MODE_OFF);
-        camera.setParameters(params);
-        camera.stopPreview();
 
-    }
+
     private boolean validateProvide(){
         String m_pervider = m_provider.getText().toString().trim();
         if(m_pervider.contains("Select Provider")){
-            showToast("Select Your Service Provider");
+//            showToast("Select Your Service Provider");
+            shortSnackBar("Select Your Service Provider");
             return false;
         }
         return true;
     }
     private boolean validateCode(){
         if(TextUtils.isEmpty(m_display.getText().toString())){
-            showToast("Please Scan Credit code");
+//            showToast("Please Scan Credit code");
+            shortSnackBar("Please Scan Credit code");
             return false;
 
         }
         return true;
+    }
+    private void longSnackBar(String msg){
+        Snackbar snackbar = Snackbar
+                .make(relativeLayout, msg, Snackbar.LENGTH_INDEFINITE)
+                .setAction("Ok", new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                    }
+                });
+
+// Changing message text color
+        snackbar.setActionTextColor(Color.RED);
+
+// Changing action button text color
+        View sbView = snackbar.getView();
+        TextView textView = (TextView) sbView.findViewById(android.support.design.R.id.snackbar_text);
+        textView.setTextColor(Color.YELLOW);
+        snackbar.show();
+
+    }
+    private void shortSnackBar(String msg){
+        Snackbar snackbar = Snackbar
+                .make(relativeLayout, msg, Snackbar.LENGTH_LONG);
+
+        snackbar.show();
+
     }
 
 

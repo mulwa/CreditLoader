@@ -13,8 +13,12 @@
         android:orientation="vertical"
         android:weightSum="1">
 
-        <SurfaceView
-            android:id="@+id/surface_view"
+        <com.example.mulwa.mobilevisionapicamera.camera.CameraSourcePreview
+            android:id="@+id/preview"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+        <com.example.mulwa.mobilevisionapicamera.camera.GraphicOverlay
+            android:id="@+id/graphicOverlay"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
 
